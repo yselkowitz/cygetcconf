@@ -13,7 +13,7 @@ blurb=" ==> Package distributor has shipped an updated version.
 
 merge() {
 	# FIXME: -f|--frontend
-	if [ -n "$MERGE" -a -x "$MERGE" ]
+	if [ -n "$MERGE" ] && which "$MERGE" &>/dev/null
 	then
 		$MERGE $1 $2
 		return $?
