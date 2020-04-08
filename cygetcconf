@@ -1,0 +1,68 @@
+#! /bin/bash
+
+blurb=" ==> Package distributor has shipped an updated version.
+   What would you like to do about it ?  Your options are:
+    Y or I  : install the package maintainer's version
+    N or O  : keep your currently-installed version
+      D     : show the differences between the versions
+      M     : merge configuration files
+      Z     : background this process to examine the situation
+      S     : skip this file
+ The default action is to keep your current version.
+*** aliases (Y/I/N/O/D/M/Z/S) [default=N] ? "
+
+merge() {
+	# FIXME: -f|--frontend
+	if [ -n "$MERGE" -a -x "$MERGE" ]
+	then
+		$MERGE $1 $2
+		return $?
+	else
+		for x in meld kdiff3 gvimdiff
+		do
+			if [ -x /usr/bin/$x -a -n "$DISPLAY" ]
+			then
+				$x $1 $2
+				return $?
+			fi
+		done
+		if [ -x /usr/bin/vimdiff ]
+		then
+			vimdiff $1 $2
+			return $?
+		fi
+	fi
+	return 1
+}
+
+for def in $(find /etc/defaults -type f)
+do
+	f=${def#/etc/defaults}
+	dif=$f
+
+	while : ; do
+		if [ ! -f $f ]
+		then
+			dif=/dev/null
+		elif diff -q $def $f &>/dev/null
+		then
+			break
+		elif [ $(stat -c %Y $f) -gt $(stat -c %W $def) ]
+		then
+			break
+		fi
+
+		echo "Configuration file '$f'"
+		ls -l $dif $def
+		echo "$blurb"
+		read -p "Your choice: " answer
+		case ${answer^^} in
+			I|Y) cp $def $f; break ;;
+			N|O) touch $f; break ;;
+			D) diff -u $dif $def | less ;;
+			M) merge $f $def ;;
+			Z) echo "Run command 'fg' to continue"; kill -TSTP $$ ;;
+			S) break ;;
+		esac
+	done
+done
