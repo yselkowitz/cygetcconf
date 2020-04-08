@@ -11,7 +11,7 @@ blurb=" ==> Package distributor has shipped an updated version.
  The default action is to keep your current version.
 *** aliases (Y/I/N/O/D/M/Z/S) [default=N] ? "
 
-merge() {
+domerge() {
 	# FIXME: -f|--frontend
 	if [ -n "$MERGE" ] && which "$MERGE" &>/dev/null
 	then
@@ -60,7 +60,7 @@ do
 			I|Y) cp $def $f; break ;;
 			N|O) touch $f; break ;;
 			D) diff -u $dif $def | less ;;
-			M) merge $f $def ;;
+			M) domerge $f $def ;;
 			Z) echo "Run command 'fg' to continue"; kill -TSTP $$ ;;
 			S) break ;;
 		esac
